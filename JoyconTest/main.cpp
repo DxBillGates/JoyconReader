@@ -98,7 +98,7 @@ int main()
 	ULONG numReport = 0;
 	HidD_GetNumInputBuffers(joyconL, &numReport);
 
-	HidD_SetNumInputBuffers(joyconL, numReport);
+	//HidD_SetNumInputBuffers(joyconL, numReport);
 
 	DWORD readSizeData = 0;
 	DWORD readDataSize = caps.InputReportByteLength;
@@ -168,27 +168,51 @@ int main()
 				}
 			}
 
-			int16_t acc[3], gyro[3];
-			for (int i = 0; i < 3; ++i)
 			{
-				acc[i] = gyro[i] = 0;
+				int16_t acc[3], gyro[3];
+				for (int i = 0; i < 3; ++i)
+				{
+					acc[i] = gyro[i] = 0;
+				}
+
+				int index = 13;
+
+				for (int i = 0; i < 3; ++i, ++index)
+				{
+					memcpy_s(&acc[i], sizeof(int16_t), &joyconLData[index], sizeof(int16_t));
+				}
+				for (int i = 0; i < 3; ++i, ++index)
+				{
+					memcpy_s(&gyro[i], sizeof(int16_t), &joyconLData[index], sizeof(int16_t));
+				}
+
+				std::cout << "L acc : " << acc[0] << ", " << acc[1] << ", " << acc[2];
+				std::cout << "     ";
+				std::cout << "gyro : " << gyro[0] << ", " << gyro[1] << ", " << gyro[2] << std::endl;
 			}
 
-			int index = 13;
-
-			for (int i = 0; i < 3; ++i,++index)
 			{
-				memcpy_s(&acc[i], sizeof(int16_t), &joyconLData[index], sizeof(int16_t));
-			}
-			for (int i = 0; i < 3; ++i,++index)
-			{
-				memcpy_s(&gyro[i], sizeof(int16_t), &joyconLData[index], sizeof(int16_t));
-			}
+				int16_t acc[3], gyro[3];
+				for (int i = 0; i < 3; ++i)
+				{
+					acc[i] = gyro[i] = 0;
+				}
 
-			std::cout << "acc : " << acc[0] << ", " << acc[1] << ", " << acc[2];
-			std::cout << "     ";
-			std::cout << "gyro : " << gyro[0] << ", " << gyro[1] << ", " << gyro[2] << std::endl;
-			//std::cout << a << std::endl;
+				int index = 13;
+
+				for (int i = 0; i < 3; ++i, ++index)
+				{
+					memcpy_s(&acc[i], sizeof(int16_t), &joyconRData[index], sizeof(int16_t));
+				}
+				for (int i = 0; i < 3; ++i, ++index)
+				{
+					memcpy_s(&gyro[i], sizeof(int16_t), &joyconRData[index], sizeof(int16_t));
+				}
+
+				std::cout << "R acc : " << acc[0] << ", " << acc[1] << ", " << acc[2];
+				std::cout << "     ";
+				std::cout << "gyro : " << gyro[0] << ", " << gyro[1] << ", " << gyro[2] << std::endl;
+			}
 		}
 
 
