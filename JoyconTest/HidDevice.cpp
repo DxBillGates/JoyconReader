@@ -3,7 +3,7 @@
 #pragma comment(lib, "hid.lib")
 #pragma comment(lib, "SetupAPI.lib")
 
-GUID* GE::GetHidGuid()
+GUID* GE::HID::GetHidGuid()
 {
 	// このPCのGUIDを取得
 	static GUID guid;
@@ -16,7 +16,7 @@ GUID* GE::GetHidGuid()
 	return &guid;
 }
 
-GE::HidDevice* GE::GetNewHidDevice(DWORD vendorID, DWORD productID)
+GE::HID::HidDevice* GE::HID::GetNewHidDevice(DWORD vendorID, DWORD productID)
 {
 	// hidデバイス情報のハンドルを取得
 	HDEVINFO devinfo;
@@ -30,7 +30,7 @@ GE::HidDevice* GE::GetNewHidDevice(DWORD vendorID, DWORD productID)
 	spid.cbSize = sizeof(spid);
 
 	HidDevice* hidDevice = new HidDevice();
-	hidDevice->overlapped.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	hidDevice->readOverlapped.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 
 	bool isFind = false;
 
@@ -45,7 +45,7 @@ GE::HidDevice* GE::GetNewHidDevice(DWORD vendorID, DWORD productID)
 		// 接続されているHIDデバイスの情報があるであろうアドレスを取得?
 		unsigned long size;
 		SetupDiGetDeviceInterfaceDetail(devinfo, &spid, NULL, 0, &size, 0);
-		PSP_INTERFACE_DEVICE_DETAIL_DATA deviceDetailData = PSP_INTERFACE_DEVICE_DETAIL_DATA(new char[size]);
+		PSP_INTERFACE_DEVICE_DETAIL_DATA deviceDetailData = new SP_INTERFACE_DEVICE_DETAIL_DATA[size];
 		deviceDetailData->cbSize = sizeof(SP_INTERFACE_DEVICE_DETAIL_DATA);
 		SetupDiGetDeviceInterfaceDetail(devinfo, &spid, deviceDetailData, size, &size, 0);
 
@@ -54,6 +54,9 @@ GE::HidDevice* GE::GetNewHidDevice(DWORD vendorID, DWORD productID)
 			, GENERIC_READ | GENERIC_WRITE
 			, FILE_SHARE_READ | FILE_SHARE_WRITE
 			, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+
+		// 確保したメモリを開放
+		delete[] deviceDetailData;
 
 		// HIDに対して入出力ができないデバイスはハンドルを作れない?
 		if (hidDevice->handle == INVALID_HANDLE_VALUE)continue;
@@ -95,11 +98,107 @@ GE::HidDevice* GE::GetNewHidDevice(DWORD vendorID, DWORD productID)
 	hidDevice->readBufferSize = hidDevice->hidpCaps.InputReportByteLength;
 	hidDevice->writeBufferSize = hidDevice->hidpCaps.OutputReportByteLength;
 
+	hidDevice->readBuffer = new BYTE[hidDevice->readBufferSize];
+	hidDevice->writeBuffer = new BYTE[hidDevice->writeBufferSize];
+
 	return hidDevice;
 }
 
-void GE::DeleteHidDevice(HidDevice* hidDevice)
+void GE::HID::GetInputReport(HidDevice* pHidDevice)
 {
+	if (pHidDevice == nullptr)return;
+
+	int milisec = pHidDevice->isBlocking ? -1 : 0;
+	bool result = false;
+	bool isOverlapped = false;
+
+	// 読み込み中かどうか
+	// 読み込み終わってるならデバイスからデータを取得
+	if (pHidDevice->isReadPending == false)
+	{
+		pHidDevice->isReadPending = true;
+		ResetEvent(pHidDevice->readOverlapped.hEvent);
+		DWORD resultReadBufferSize = 0;
+		result = ReadFile(pHidDevice->handle, pHidDevice->readBuffer, pHidDevice->readBufferSize, &resultReadBufferSize, &pHidDevice->readOverlapped);
+		if (result == false)
+		{
+			if (GetLastError() == ERROR_IO_PENDING)
+			{
+				isOverlapped = true;
+			}
+		}
+	}
+
+	if (isOverlapped)
+	{
+		if (milisec >= 0)
+		{
+			result = WaitForSingleObject(pHidDevice->readOverlapped.hEvent,0);
+			if (result != WAIT_OBJECT_0)
+			{
+				return;
+			}
+		}
+		DWORD resultOverlappedSize = 0;
+		result = GetOverlappedResult(pHidDevice->handle, &pHidDevice->readOverlapped, &resultOverlappedSize, TRUE);
+	}
+
+	pHidDevice->isReadPending = false;
+}
+
+void GE::HID::SetOutputReport(HidDevice* pHidDevice, void* data, int dataSize)
+{
+	if (pHidDevice == nullptr)return;
+
+	unsigned char* buffer;
+	int bufferSize = 0;
+
+	// 遅れてきたデータサイズがHidDeviceで確保されているデータサイズと不一致時の対応
+	if (dataSize >= pHidDevice->writeBufferSize)
+	{
+		buffer = (unsigned char*)data;
+		bufferSize = dataSize;
+	}
+	else
+	{
+		buffer = pHidDevice->writeBuffer;
+		bufferSize = pHidDevice->writeBufferSize;
+
+		// データをコピー
+		memcpy_s(buffer, bufferSize, data, dataSize);
+		// 余剰データ分があるならそこは0で埋める
+		memset(buffer + dataSize, 0, (INT64)pHidDevice->writeBufferSize - dataSize);
+		bufferSize = pHidDevice->writeBufferSize;
+	}
+
+	DWORD resultDataSize = 0;
+	bool result = WriteFile(pHidDevice->handle, buffer, bufferSize, &resultDataSize, &pHidDevice->writeOverlapped);
+
+	// 書き込み終了待ち
+	if (result == false)
+	{
+		if (GetLastError() == ERROR_IO_PENDING)
+		{
+			result = WaitForSingleObject(pHidDevice->writeOverlapped.hEvent, 1000);
+			if (result == false)return;
+
+			DWORD overlappedSize = 0;
+			result = GetOverlappedResult(pHidDevice->handle, &pHidDevice->writeOverlapped, &overlappedSize, FALSE);
+		}
+	}
+}
+
+void GE::HID::DeleteHidDevice(HidDevice* hidDevice)
+{
+	if (hidDevice == nullptr)return;
+
 	delete hidDevice;
 	hidDevice = nullptr;
+}
+
+void GE::HID::SetBlocking(HidDevice* pHidDevice, bool isBlocking)
+{
+	if (pHidDevice == nullptr)return;
+
+	pHidDevice->isBlocking = isBlocking;
 }
