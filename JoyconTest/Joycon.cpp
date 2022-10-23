@@ -31,14 +31,14 @@ bool GE::Joycon::GetTrigger(byte before, byte current, int type)
 {
 	bool beforeState = before & type;
 	bool currentState = current & type;
-	return before == false && currentState == true;
+	return beforeState == false && currentState == true;
 }
 
 bool GE::Joycon::GetRelease(byte before, byte current, int type)
 {
 	bool beforeState = before & type;
 	bool currentState = current & type;
-	return before == true && currentState == false;
+	return beforeState == true && currentState == false;
 }
 
 GE::Joycon::Joycon(JoyconType type)
@@ -53,6 +53,7 @@ GE::Joycon::Joycon(JoyconType type)
 	, currentJoyconShareButtonState(0)
 	, accelerometer()
 	, gyroscope()
+	, stickData()
 {
 }
 

@@ -154,7 +154,7 @@ void GE::HID::SetOutputReport(HidDevice* pHidDevice, void* data, int dataSize)
 	int bufferSize = 0;
 
 	// 遅れてきたデータサイズがHidDeviceで確保されているデータサイズと不一致時の対応
-	if (dataSize >= pHidDevice->writeBufferSize)
+	if ((unsigned)dataSize >= pHidDevice->writeBufferSize)
 	{
 		buffer = (unsigned char*)data;
 		bufferSize = dataSize;
