@@ -87,7 +87,57 @@ namespace GE
 		FOUR_PLAYER  = 0x08,
 	};
 
-	struct VectorInt16
+	///// <summary>
+	///// インプットレポート0x3f時のボタンフラグ判定用
+	///// </summary>
+	//enum class JoyconButtonData_IR0x3F
+	//{
+	//};
+
+	/// <summary>
+	/// インプットレポート0x30時のJoyconLのボタンフラグ判定用
+	/// </summary>
+	enum class JoyconButtonData
+	{
+		Y        = (1 << 0),
+		X        = (1 << 1),
+		B        = (1 << 2),
+		A        = (1 << 3),
+		RIGHT_SR = (1 << 4),
+		RIGHT_SL = (1 << 5),
+		R        = (1 << 6),
+		ZR       = (1 << 7),
+
+		DOWN    = (1 << 0),
+		UP      = (1 << 1),
+		RIGHT   = (1 << 2),
+		LEFT    = (1 << 3),
+		LEFT_SR = (1 << 4),
+		LEFT_SL = (1 << 5),
+		L       = (1 << 6),
+		ZL      = (1 << 7),
+	};
+
+	enum class JoyconShareButtonData
+	{
+		MINUS         = (1 << 0),
+		PLUS          = (1 << 1),
+		RSTICK        = (1 << 2),
+		LSTICK        = (1 << 3),
+		HOME          = (1 << 4),
+		CAPTURE       = (1 << 5),
+		/////////////////////////
+		CHARGING_GRIP = (1 << 7),
+	};
+
+	// プロダクトID　兼　右左判別用
+	enum class JoyconType
+	{
+		L = 8198,
+		R = 8199,
+	};
+
+	struct Vector3Int16
 	{
 		union
 		{
@@ -100,24 +150,47 @@ namespace GE
 		};
 	};
 
+	struct Vector2Int16
+	{
+		union
+		{
+			struct
+			{
+				int16_t x, y;
+			};
+
+			int16_t value[2];
+		};
+	};
+
 	class Joycon
 	{
 	private:
-		HID::HidDevice* joyconL;
-		HID::HidDevice* joyconR;
+		HID::HidDevice* joycon;
+		JoyconType joyconType;
+		JoyconInputReportType currentInputReportType;
 
 		BYTE buf[0x40];
 		int globalPacketCount;
 
-		JoyconInputReportType currentInputReportType;
+		byte beforeJoyconButtonState;
+		byte beforeJoyconShareButtonState;
 
-		VectorInt16 accelerometer[2];
-		VectorInt16 gyroscope[2];
+		byte currentJoyconButtonState;
+		byte currentJoyconShareButtonState;
+
+		Vector3Int16 accelerometer;
+		Vector3Int16 gyroscope;
+
+		Vector2Int16 stickData;
 	private:
 		void SendCommand(JoyconCommandID commandID, void* data, int dataSize);
 		void SetInputReportType(JoyconInputReportType inputReportType);
+
+		bool GetTrigger(byte before, byte current,int type);
+		bool GetRelease(byte before, byte current,int type);
 	public:
-		Joycon();
+		Joycon(JoyconType type);
 		~Joycon();
 
 		void Initialize();
@@ -126,5 +199,19 @@ namespace GE
 		void SetPlayerLight(PlayerLightData playerLightData);
 		void SetIMU(bool flag);
 		void SetVibration(bool flag);
+
+		bool GetButton(JoyconButtonData buttonType);
+		bool GetButton(JoyconShareButtonData buttonType);
+
+		bool GetTriggerButton(JoyconButtonData buttonType);
+		bool GetTriggerButton(JoyconShareButtonData buttonType);
+
+		bool GetReleaseButton(JoyconButtonData buttonType);
+		bool GetReleaseButton(JoyconShareButtonData buttonType);
+
+		Vector3Int16 GetAccelerometer();
+		Vector3Int16 GetGyroscope();
+		
+		Vector2Int16 GetStick();
 	};
 }
