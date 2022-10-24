@@ -127,18 +127,6 @@ namespace GE
 		CHARGING_GRIP = (1 << 23),
 	};
 
-	//enum class JoyconShareButtonData
-	//{
-	//	MINUS         = (1 << 0),
-	//	PLUS          = (1 << 1),
-	//	RSTICK        = (1 << 2),
-	//	LSTICK        = (1 << 3),
-	//	HOME          = (1 << 4),
-	//	CAPTURE       = (1 << 5),
-	//	/////////////////////////
-	//	CHARGING_GRIP = (1 << 7),
-	//};
-
 	// プロダクトID　兼　右左判別用
 	enum class JoyconType
 	{

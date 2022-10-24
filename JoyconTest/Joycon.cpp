@@ -1,5 +1,4 @@
 #include "Joycon.h"
-#include <iostream>
 
 void GE::Joycon::SendCommand(JoyconCommandID commandID, void* data, int dataSize)
 {
