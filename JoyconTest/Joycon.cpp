@@ -1,4 +1,6 @@
 #include "Joycon.h"
+#include <iostream>
+#include <thread>
 
 void GE::Joycon::SendCommand(JoyconCommandID commandID, void* data, int dataSize)
 {
@@ -7,11 +9,26 @@ void GE::Joycon::SendCommand(JoyconCommandID commandID, void* data, int dataSize
 	memset(buf, 0, 0x40);
 	buf[0] = 1;
 	buf[1] = globalPacketCount;
+
+	// rumble data
+	buf[2] = 0x00;
+	buf[3] = 0x01;
+	buf[4] = 0x40;
+	buf[5] = 0x40;
+	buf[6] = 0x00;
+	buf[7] = 0x01;
+	buf[8] = 0x40;
+	buf[9] = 0x40;
+
+	// subcommand id
 	buf[10] = (int)commandID;
 
 	memcpy_s(buf + 11, 0x40 - 10, data, 1);
 
-	SetOutputReport(joycon, buf, 0x40);
+	SetOutputReport(joycon, buf, 48);
+
+	// 0.016秒停止
+	std::this_thread::sleep_for(std::chrono::milliseconds(16));
 
 	++globalPacketCount;
 }
@@ -87,7 +104,9 @@ void GE::Joycon::Update()
 		SetInputReportType(JoyconInputReportType::STANDARD_FULL_MODE);
 	}
 
+	// ジョイコンのデータ取得
 	HID::GetInputReport(joycon);
+
 	// 各ボタンの情報取得
 	beforeJoyconButtonState = currentJoyconButtonState;
 	beforeJoyconShareButtonState = currentJoyconShareButtonState;
@@ -96,7 +115,6 @@ void GE::Joycon::Update()
 	currentJoyconShareButtonState = joycon->readBuffer[4];
 
 	// スティック情報取得
-	//const Vector2Int16 DEFAULT_VALUE = { 2000,2200 };
 	const int LEFT_STICK_DATA_INDEX = 6;
 	const int RIGHT_STICK_DATA_INDEX = 9;
 	uint8_t* data = joycon->readBuffer + (joyconType == JoyconType::L ? LEFT_STICK_DATA_INDEX : RIGHT_STICK_DATA_INDEX);
@@ -106,17 +124,28 @@ void GE::Joycon::Update()
 	// ジャイロと加速度センサーの情報を取得
 	int accelIndex = 13;
 	int gyroIndex = 19;
+	const Vector3Int16 OFFSET = { 0,0,0 };
 	for (int i = 0; i < 3; ++i, accelIndex += 2, gyroIndex += 2)
 	{
 		memcpy_s(&accelerometer.value[i], sizeof(int16_t), &joycon->readBuffer[accelIndex], sizeof(int16_t));
 		memcpy_s(&gyroscope.value[i], sizeof(int16_t), &joycon->readBuffer[gyroIndex], sizeof(int16_t));
+
+		accelerometer.value[i] -= OFFSET.value[i];
+		gyroscope.value[i] -= OFFSET.value[i];
 
 		accelerometer.value[i] *= 0.000244f;
 		gyroscope.value[i] *= 0.06103f;
 	}
 }
 
-void GE::Joycon::SetPlayerLight(PlayerLightData playerLightData)
+void GE::Joycon::ResetPairing()
+{
+	byte data[1] = {0x02};
+
+	SendCommand(JoyconCommandID::SET_HCI_STATE, data, 1);
+}
+
+void GE::Joycon::SetPlayerLight(JoyconLightData playerLightData)
 {
 	byte data[1];
 	data[0] = (int)playerLightData;
@@ -138,6 +167,12 @@ void GE::Joycon::SetVibration(bool flag)
 	data[0] = flag;
 
 	SendCommand(JoyconCommandID::ENABLE_VIVRATION, data, 1);
+}
+
+GE::JoyconBatteryData GE::Joycon::GetBattery()
+{
+	int battery = (int)(joycon->readBuffer[2]) >> 4;
+	return (JoyconBatteryData)battery;
 }
 
 bool GE::Joycon::GetButton(JoyconButtonData buttonType)

@@ -10,38 +10,44 @@ int main()
 	GE::Joycon joyconL(GE::JoyconType::L);
 	joyconL.Initialize();
 	joyconL.SetIMU(true);
-	joyconL.SetPlayerLight(GE::PlayerLightData::ONE_PLAYER);
+	joyconL.SetPlayerLight(GE::JoyconLightData::ONE_PLAYER);
 
 	GE::Joycon joyconR(GE::JoyconType::R);
 	joyconR.Initialize();
 	joyconR.SetIMU(true);
-	joyconR.SetPlayerLight(GE::PlayerLightData::ONE_PLAYER);
+	joyconR.SetPlayerLight(GE::JoyconLightData::ONE_PLAYER);
 
 
 	while (true)
 	{
 		static int a = 0;
-		if (a == 10000)break;
+		if (a == 100000)break;
 
 		if (a % 10 == 0)
 		{
 			joyconL.Update();
 			joyconR.Update();
-			//std::cout << "stick x : " << joycon.GetStick().x << std::endl;
-			//std::cout << "stick y : " << joycon.GetStick().y << std::endl;
 
-			std::cout << "minus" << joyconL.GetButton(GE::JoyconButtonData::MINUS) << std::endl;
-			std::cout << " plus" << joyconR.GetButton(GE::JoyconButtonData::PLUS) <<  std::endl;
+			GE::Vector3Int16 vectorData = joyconL.GetGyroscope();
 
-			if (joyconL.GetReleaseButton(GE::JoyconButtonData::LSTICK))
-			{
-				std::cout << "release" << std::endl;
-			}
+			std::cout << "‰Á‘¬“x : " << vectorData.x;
+			std::cout << ", " << vectorData.y;
+			std::cout << ", " << vectorData.z << std::endl;
 
-			if (joyconR.GetTriggerButton(GE::JoyconButtonData::RSTICK))
-			{
-				std::cout << "trigger" << std::endl;
-			}
+			//std::cout << "minus" << joyconL.GetButton(GE::JoyconButtonData::MINUS) << std::endl;
+			//std::cout << " plus" << joyconR.GetButton(GE::JoyconButtonData::PLUS) <<  std::endl;
+
+			//if (joyconL.GetReleaseButton(GE::JoyconButtonData::LSTICK))
+			//{
+			//	std::cout << "release" << std::endl;
+			//}
+
+			//if (joyconR.GetTriggerButton(GE::JoyconButtonData::RSTICK))
+			//{
+			//	std::cout << "trigger" << std::endl;
+			//}
+
+			if (joyconL.GetButton(GE::JoyconButtonData::MINUS))break;
 		}
 
 		++a;

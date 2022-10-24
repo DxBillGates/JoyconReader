@@ -4,6 +4,13 @@
 
 namespace GE
 {
+	// プロダクトID　兼　右左判別用
+	enum class JoyconType
+	{
+		L = 8198,
+		R = 8199,
+	};
+
 	enum class JoyconInputReportType
 	{
 		STANDARD_FULL_MODE = 0x30,
@@ -23,7 +30,11 @@ namespace GE
 
 		//TRIGGER_BUTTONS_ELAPSED_TIME    = 0x04,
 		//GET_PAGE_LIST_STATE             = 0x05,
-		//SET_HCI_STATE                   = 0x06,
+
+		/// <summary>
+		/// data[0] : x00 = sleep mode / x01 = reboot and reconnect / x02 = reboot and pairing mode / x03 = reboot and reconnect
+		/// </summary>
+		SET_HCI_STATE                   = 0x06,
 		//RESET_PAIRING_INFO              = 0x07,
 		//SET_SHIPMMENT_LOW_POWER_STATE   = 0x08,
 									    
@@ -79,12 +90,20 @@ namespace GE
 		//SET_GPIO_PIN_OUTPUT_VALUE_PORT1 = 0x51,
 	};
 
-	enum class PlayerLightData
+	enum class JoyconLightData
 	{
 		ONE_PLAYER   = 0x01,
 		TWO_PLAYER   = 0x02,
 		THREE_PLAYER = 0x04,
 		FOUR_PLAYER  = 0x08,
+	};
+
+	enum class JoyconBatteryData
+	{
+		FULL = 8,
+		MIDDLE = 4,
+		LOW = 2,
+		EMPTY = 0,
 	};
 
 	///// <summary>
@@ -125,13 +144,6 @@ namespace GE
 		CAPTURE       = (1 << 21),
 		//////////////////////////
 		CHARGING_GRIP = (1 << 23),
-	};
-
-	// プロダクトID　兼　右左判別用
-	enum class JoyconType
-	{
-		L = 8198,
-		R = 8199,
 	};
 
 	struct Vector3Int16
@@ -193,10 +205,13 @@ namespace GE
 		void Initialize();
 		void Update();
 
-		void SetPlayerLight(PlayerLightData playerLightData);
+		void ResetPairing();
+
+		void SetPlayerLight(JoyconLightData playerLightData);
 		void SetIMU(bool flag);
 		void SetVibration(bool flag);
 
+		JoyconBatteryData GetBattery();
 		bool GetButton(JoyconButtonData buttonType);
 		bool GetTriggerButton(JoyconButtonData buttonType);
 		bool GetReleaseButton(JoyconButtonData buttonType);
