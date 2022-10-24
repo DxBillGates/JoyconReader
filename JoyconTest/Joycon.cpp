@@ -29,6 +29,9 @@ void GE::Joycon::SetInputReportType(JoyconInputReportType inputReportType)
 
 bool GE::Joycon::GetTrigger(byte before, byte current, int type)
 {
+	if (type >= (int)JoyconButtonData::MINUS)type /= (int)JoyconButtonData::MINUS;
+	else if (type >= (int)JoyconButtonData::DOWN)type /= (int)JoyconButtonData::DOWN;
+
 	bool beforeState = before & type;
 	bool currentState = current & type;
 	return beforeState == false && currentState == true;
@@ -36,6 +39,9 @@ bool GE::Joycon::GetTrigger(byte before, byte current, int type)
 
 bool GE::Joycon::GetRelease(byte before, byte current, int type)
 {
+	if (type >= (int)JoyconButtonData::MINUS)type /= (int)JoyconButtonData::MINUS;
+	else if (type >= (int)JoyconButtonData::DOWN)type /= (int)JoyconButtonData::DOWN;
+
 	bool beforeState = before & type;
 	bool currentState = current & type;
 	return beforeState == true && currentState == false;
@@ -91,7 +97,7 @@ void GE::Joycon::Update()
 	currentJoyconShareButtonState = joycon->readBuffer[4];
 
 	// スティック情報取得
-	const Vector2Int16 DEFAULT_VALUE = { 2000,2200 };
+	//const Vector2Int16 DEFAULT_VALUE = { 2000,2200 };
 	const int LEFT_STICK_DATA_INDEX = 6;
 	const int RIGHT_STICK_DATA_INDEX = 9;
 	uint8_t* data = joycon->readBuffer + (joyconType == JoyconType::L ? LEFT_STICK_DATA_INDEX : RIGHT_STICK_DATA_INDEX);
@@ -99,7 +105,6 @@ void GE::Joycon::Update()
 	stickData.y = (data[1] >> 4) | (data[2] << 4);
 
 	// ジャイロと加速度センサーの情報を取得
-	int index = 13;
 	int accelIndex = 13;
 	int gyroIndex = 19;
 	for (int i = 0; i < 3; ++i, accelIndex += 2, gyroIndex += 2)
@@ -140,41 +145,34 @@ bool GE::Joycon::GetButton(JoyconButtonData buttonType)
 {
 	if (joycon == nullptr)return false;
 
-	return (currentJoyconButtonState & (int)buttonType);
-}
+	int currentState = (int)buttonType >= (int)JoyconButtonData::MINUS ? currentJoyconShareButtonState : currentJoyconButtonState;
+	int type = (int)buttonType;
+	if (type >= (int)JoyconButtonData::MINUS)type /= (int)JoyconButtonData::MINUS;
+	else if (type >= (int)JoyconButtonData::DOWN)type /= (int)JoyconButtonData::DOWN;
 
-bool GE::Joycon::GetButton(JoyconShareButtonData buttonType)
-{
-	if (joycon == nullptr)return false;
-	return (currentJoyconShareButtonState & (int)buttonType);
+	return (currentState & type);
 }
 
 bool GE::Joycon::GetTriggerButton(JoyconButtonData buttonType)
 {
 	if (joycon == nullptr)return false;
 
-	return GetTrigger(beforeJoyconButtonState,currentJoyconButtonState,(int)buttonType);
-}
+	bool isShareInput = (int)buttonType >= (int)JoyconButtonData::MINUS;
+	int beforeState = isShareInput ? beforeJoyconShareButtonState : beforeJoyconButtonState;
+	int currentState = isShareInput ? currentJoyconShareButtonState : currentJoyconButtonState;
 
-bool GE::Joycon::GetTriggerButton(JoyconShareButtonData buttonType)
-{
-	if (joycon == nullptr)return false;
-
-	return GetTrigger(beforeJoyconShareButtonState, currentJoyconShareButtonState, (int)buttonType);
+	return GetTrigger(beforeState,currentState,(int)buttonType);
 }
 
 bool GE::Joycon::GetReleaseButton(JoyconButtonData buttonType)
 {
 	if (joycon == nullptr)return false;
 
-	return GetRelease(beforeJoyconButtonState,currentJoyconButtonState,(int)buttonType);
-}
+	bool isShareInput = (int)buttonType >= (int)JoyconButtonData::MINUS;
+	int beforeState = isShareInput ? beforeJoyconShareButtonState : beforeJoyconButtonState;
+	int currentState = isShareInput ? currentJoyconShareButtonState : currentJoyconButtonState;
 
-bool GE::Joycon::GetReleaseButton(JoyconShareButtonData buttonType)
-{
-	if (joycon == nullptr)return false;
-
-	return GetRelease(beforeJoyconShareButtonState, currentJoyconShareButtonState, (int)buttonType);
+	return GetRelease(beforeState,currentState,(int)buttonType);
 }
 
 GE::Vector3Int16 GE::Joycon::GetAccelerometer()

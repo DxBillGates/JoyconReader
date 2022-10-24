@@ -331,10 +331,16 @@ int main()
 	//DeleteHidDevice(joyconL);
 	//DeleteHidDevice(joyconR);
 
-	GE::Joycon joycon(GE::JoyconType::L);
-	joycon.Initialize();
-	joycon.SetIMU(true);
-	joycon.SetPlayerLight(GE::PlayerLightData::ONE_PLAYER);
+	GE::Joycon joyconL(GE::JoyconType::L);
+	joyconL.Initialize();
+	joyconL.SetIMU(true);
+	joyconL.SetPlayerLight(GE::PlayerLightData::ONE_PLAYER);
+
+	GE::Joycon joyconR(GE::JoyconType::R);
+	joyconR.Initialize();
+	joyconR.SetIMU(true);
+	joyconR.SetPlayerLight(GE::PlayerLightData::ONE_PLAYER);
+
 
 	while (true)
 	{
@@ -343,22 +349,23 @@ int main()
 
 		if (a % 10 == 0)
 		{
-			joycon.Update();
-			std::cout << "stick x : " << joycon.GetStick().x << std::endl;
-			std::cout << "stick y : " << joycon.GetStick().y << std::endl;
+			joyconL.Update();
+			joyconR.Update();
+			//std::cout << "stick x : " << joycon.GetStick().x << std::endl;
+			//std::cout << "stick y : " << joycon.GetStick().y << std::endl;
 
-			//std::cout << "   up" << joycon.GetButton(GE::JoyconButtonData::UP) <<  std::endl;
-			//std::cout << "minus" << joycon.GetButton(GE::JoyconShareButtonData::MINUS) << std::endl;
+			std::cout << "minus" << joyconL.GetButton(GE::JoyconButtonData::MINUS) << std::endl;
+			std::cout << " plus" << joyconR.GetButton(GE::JoyconButtonData::PLUS) <<  std::endl;
 
-			//if (joycon.GetTriggerButton(GE::JoyconButtonData::LEFT))
-			//{
-			//	std::cout << "trigger" << std::endl;
-			//}
+			if (joyconL.GetReleaseButton(GE::JoyconButtonData::LSTICK))
+			{
+				std::cout << "release" << std::endl;
+			}
 
-			//if (joycon.GetReleaseButton(GE::JoyconShareButtonData::LSTICK))
-			//{
-			//	std::cout << "release" << std::endl;
-			//}
+			if (joyconR.GetTriggerButton(GE::JoyconButtonData::RSTICK))
+			{
+				std::cout << "trigger" << std::endl;
+			}
 		}
 
 		++a;

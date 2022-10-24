@@ -108,27 +108,36 @@ namespace GE
 		R        = (1 << 6),
 		ZR       = (1 << 7),
 
-		DOWN    = (1 << 0),
-		UP      = (1 << 1),
-		RIGHT   = (1 << 2),
-		LEFT    = (1 << 3),
-		LEFT_SR = (1 << 4),
-		LEFT_SL = (1 << 5),
-		L       = (1 << 6),
-		ZL      = (1 << 7),
+		DOWN    = (1 << 8),
+		UP      = (1 << 9),
+		RIGHT   = (1 << 10),
+		LEFT    = (1 << 11),
+		LEFT_SR = (1 << 12),
+		LEFT_SL = (1 << 13),
+		L       = (1 << 14),
+		ZL      = (1 << 15),
+
+		MINUS         = (1 << 16),
+		PLUS          = (1 << 17),
+		RSTICK        = (1 << 18),
+		LSTICK        = (1 << 19),
+		HOME          = (1 << 20),
+		CAPTURE       = (1 << 21),
+		//////////////////////////
+		CHARGING_GRIP = (1 << 23),
 	};
 
-	enum class JoyconShareButtonData
-	{
-		MINUS         = (1 << 0),
-		PLUS          = (1 << 1),
-		RSTICK        = (1 << 2),
-		LSTICK        = (1 << 3),
-		HOME          = (1 << 4),
-		CAPTURE       = (1 << 5),
-		/////////////////////////
-		CHARGING_GRIP = (1 << 7),
-	};
+	//enum class JoyconShareButtonData
+	//{
+	//	MINUS         = (1 << 0),
+	//	PLUS          = (1 << 1),
+	//	RSTICK        = (1 << 2),
+	//	LSTICK        = (1 << 3),
+	//	HOME          = (1 << 4),
+	//	CAPTURE       = (1 << 5),
+	//	/////////////////////////
+	//	CHARGING_GRIP = (1 << 7),
+	//};
 
 	// プロダクトID　兼　右左判別用
 	enum class JoyconType
@@ -201,13 +210,8 @@ namespace GE
 		void SetVibration(bool flag);
 
 		bool GetButton(JoyconButtonData buttonType);
-		bool GetButton(JoyconShareButtonData buttonType);
-
 		bool GetTriggerButton(JoyconButtonData buttonType);
-		bool GetTriggerButton(JoyconShareButtonData buttonType);
-
 		bool GetReleaseButton(JoyconButtonData buttonType);
-		bool GetReleaseButton(JoyconShareButtonData buttonType);
 
 		Vector3Int16 GetAccelerometer();
 		Vector3Int16 GetGyroscope();
