@@ -21,7 +21,7 @@ int main()
 	while (true)
 	{
 		static int a = 0;
-		if (a == 100000)break;
+		if (a == 1000000)break;
 
 		if (a % 10 == 0)
 		{
@@ -30,9 +30,15 @@ int main()
 
 			GE::Vector3Int16 vectorData = joyconL.GetGyroscope();
 
-			std::cout << "加速度 : " << vectorData.x;
+			std::cout << "ジャイロ : " << vectorData.x;
 			std::cout << ", " << vectorData.y;
 			std::cout << ", " << vectorData.z << std::endl;
+
+			
+			//vectorData = joyconL.GetAccelerometer();
+			//std::cout << "加速度　 : " << vectorData.x;
+			//std::cout << ", " << vectorData.y;
+			//std::cout << ", " << vectorData.z << std::endl;
 
 			//std::cout << "minus" << joyconL.GetButton(GE::JoyconButtonData::MINUS) << std::endl;
 			//std::cout << " plus" << joyconR.GetButton(GE::JoyconButtonData::PLUS) <<  std::endl;
